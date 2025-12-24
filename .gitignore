@@ -25,3 +25,6 @@ _backup_*/
 *.swo
 *.swn
 *.tmp
+
+# local install helper
+scripts/install_desktop.js
