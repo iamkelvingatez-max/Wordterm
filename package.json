@@ -1,0 +1,36 @@
+{
+  "name": "wordterm",
+  "version": "1.0.0",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "postinstall": "electron-rebuild -f -w node-pty"
+  },
+  "dependencies": {
+    "node-pty": "^1.0.0",
+    "xterm": "^5.5.0",
+    "xterm-addon-fit": "^0.10.0"
+  },
+  "devDependencies": {
+    "electron": "^28.3.3",
+    "electron-rebuild": "^3.2.9"
+  },
+  "build": {
+    "appId": "com.wordterm.app",
+    "productName": "WordTerm",
+    "linux": {
+      "icon": "assets/icons/icon.png",
+      "target": ["AppImage", "deb"],
+      "category": "Utility"
+    },
+    "win": {
+      "icon": "assets/icons/icon.png",
+      "target": ["nsis", "portable"]
+    },
+    "mac": {
+      "icon": "assets/icons/icon.png",
+      "category": "public.app-category.utilities"
+    }
+  }
+}

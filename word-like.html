@@ -1,0 +1,1374 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Document1 - Word</title>
+
+  <link rel="stylesheet" href="./node_modules/xterm/css/xterm.css" />
+
+  <style>
+    :root{
+      --h-title: 42px;
+      --h-tabs: 32px;
+      --h-ribbon: 100px;
+      --h-status: 28px;
+
+      --chrome: #f3f6f9;
+      --ribbon: #ffffff;
+      --canvas: #e8ecf1;
+      --text: #1f1f1f;
+      --muted: #5f5f5f;
+      --muted2:#7a7a7a;
+      --line: rgba(0,0,0,.08);
+      --line2: rgba(0,0,0,.14);
+      --blue: #0078d4;
+      --accent: #2b579a;
+      --purple: #7a3fb1;
+      --danger: #d13438;
+      --yellow: #ffd700;
+
+      --font: "Segoe UI Variable","Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+
+      --page-w: 920px;
+      --page-h: 1190px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,.12), 0 2px 4px rgba(0,0,0,.06);
+      --shadow-lg: 0 16px 48px rgba(0,0,0,.16), 0 8px 16px rgba(0,0,0,.08);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; margin:0; }
+
+    body{
+      font-family: var(--font);
+      color: var(--text);
+      background: var(--canvas);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: geometricPrecision;
+      overflow: hidden;
+    }
+
+    .app{
+      height:100%;
+      display:grid;
+      grid-template-rows: var(--h-title) var(--h-tabs) var(--h-ribbon) 1fr var(--h-status);
+      overflow: hidden;
+    }
+
+    /* File Menu - Enhanced */
+    #file-menu{
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, #2b579a 0%, #1e4278 100%);
+      z-index: 10000;
+      display: none;
+      overflow: hidden;
+    }
+
+    #file-menu.active{
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .file-sidebar{
+      background: linear-gradient(180deg, rgba(0,0,0,.1) 0%, transparent 100%);
+      padding: 20px 0;
+      overflow-y: auto;
+      border-right: 1px solid rgba(255,255,255,.1);
+    }
+
+    .file-content{
+      background: linear-gradient(135deg, #f8f9fa 0%, #f0f2f5 100%);
+      padding: 50px 70px;
+      overflow-y: auto;
+    }
+
+    .file-back{
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 28px;
+      color: #fff;
+      font-size: 15px;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      width: 100%;
+      text-align: left;
+      transition: all 0.2s ease;
+    }
+
+    .file-back:hover{
+      background: rgba(255,255,255,.15);
+      transform: translateX(2px);
+    }
+
+    .file-nav-item{
+      padding: 16px 28px;
+      color: rgba(255,255,255,.95);
+      font-size: 15px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: all 0.2s ease;
+    }
+
+    .file-nav-item:hover{
+      background: rgba(255,255,255,.12);
+      border-left-color: rgba(255,255,255,.8);
+      color: #fff;
+    }
+
+    .file-nav-item.active{
+      background: rgba(255,255,255,.18);
+      border-left-color: #fff;
+      font-weight: 600;
+      color: #fff;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.05);
+    }
+
+    .file-section{
+      display: none;
+    }
+
+    .file-section.active{
+      display: block;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .file-section h2{
+      font-size: 26px;
+      color: #1a1a1a;
+      margin: 0 0 28px 0;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .file-section h3{
+      font-size: 17px;
+      color: #2b579a;
+      margin: 32px 0 14px 0;
+      font-weight: 600;
+    }
+
+    .file-grid{
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .file-btn{
+      padding: 18px 22px;
+      background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+      border: 1px solid rgba(0,0,0,.12);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: left;
+      font-family: var(--font);
+      font-size: 14px;
+      color: var(--text);
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .file-btn::before{
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--blue);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .file-btn:hover{
+      background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+      border-color: var(--blue);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .file-btn:hover::before{
+      opacity: 1;
+    }
+
+    .file-btn:active{
+      transform: translateY(0);
+    }
+
+    .file-btn strong{
+      display: block;
+      margin-bottom: 4px;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .file-btn small{
+      color: var(--muted2);
+      font-size: 12px;
+    }
+
+    /* Titlebar - Enhanced */
+    .titlebar{
+      background: linear-gradient(180deg, #f8f9fb 0%, #f3f6f9 100%);
+      border-bottom: 1px solid rgba(0,0,0,.08);
+      box-shadow: 0 1px 0 rgba(255,255,255,.8) inset;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding: 0 12px;
+      user-select:none;
+      overflow: hidden;
+    }
+
+    .left-title{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width: 460px;
+    }
+
+    .word-icon{
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      background: linear-gradient(135deg, #2b579a 0%, #1e4278 100%);
+      display:grid;
+      place-items:center;
+      color:#fff;
+      font-weight:700;
+      font-size: 13px;
+      letter-spacing:.2px;
+      box-shadow: 0 2px 4px rgba(43,87,154,.3), 0 1px 2px rgba(43,87,154,.2);
+    }
+
+    .autosave{
+      display:flex;
+      align-items:center;
+      gap:9px;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    .toggle{
+      width: 42px;
+      height: 20px;
+      border-radius:10px;
+      border: 1px solid rgba(0,0,0,.15);
+      background: linear-gradient(180deg, #f5f5f5 0%, #e8e8e8 100%);
+      position:relative;
+      box-shadow: 0 1px 2px rgba(0,0,0,.1) inset;
+    }
+    .toggle::after{
+      content:"";
+      position:absolute;
+      top:2px;
+      left:2px;
+      width: 16px;
+      height: 16px;
+      border-radius:8px;
+      background: linear-gradient(180deg, #ffffff 0%, #f0f0f0 100%);
+      box-shadow: 0 2px 4px rgba(0,0,0,.15), 0 1px 2px rgba(0,0,0,.1);
+    }
+    .toggle-off{ font-size: 13px; color: var(--muted2); }
+
+    .qa{
+      display:flex;
+      align-items:center;
+      gap:7px;
+      margin-left: 3px;
+    }
+
+    .qbtn{
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      display:grid;
+      place-items:center;
+      border:1px solid transparent;
+      background: transparent;
+      cursor:pointer;
+      color:#4a4a4a;
+      transition: all 0.15s ease;
+    }
+    .qbtn:hover{
+      background: rgba(0,0,0,.06);
+      border-color: rgba(0,0,0,.1);
+      box-shadow: 0 1px 2px rgba(0,0,0,.05);
+    }
+    .qbtn:active{
+      transform: scale(0.95);
+    }
+
+    .docname{
+      font-size: 13.5px;
+      color:#2f2f2f;
+      margin-left: 5px;
+      white-space: nowrap;
+      font-weight: 500;
+    }
+
+    .searchwrap{
+      flex:1;
+      display:flex;
+      justify-content:center;
+      padding: 0 12px;
+      min-width: 0;
+    }
+    .search{
+      width: 560px;
+      max-width: 52vw;
+      height: 30px;
+      border: 1px solid rgba(0,0,0,.15);
+      border-radius: 6px;
+      background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+      display:flex;
+      align-items:center;
+      gap:9px;
+      padding: 0 11px;
+      color: var(--muted2);
+      font-size: 13px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06) inset;
+      min-width: 0;
+      transition: all 0.2s ease;
+    }
+    .search:focus-within{
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(0,120,212,.1), 0 1px 3px rgba(0,0,0,.06) inset;
+    }
+    .search input{
+      border:none;
+      outline:none;
+      width:100%;
+      font: inherit;
+      background: transparent;
+      color: var(--text);
+      min-width: 0;
+    }
+
+    .right-title{
+      display:flex;
+      align-items:center;
+      gap:11px;
+      min-width: 240px;
+      justify-content:flex-end;
+    }
+
+    .avatar{
+      width: 24px;
+      height: 24px;
+      border-radius:50%;
+      background: linear-gradient(135deg, #5a78ff 0%, #4a68ef 100%);
+      color:#fff;
+      display:grid;
+      place-items:center;
+      font-size: 11px;
+      font-weight:700;
+      box-shadow: 0 2px 4px rgba(90,120,255,.3);
+    }
+
+    .winbtns{
+      display:flex;
+      align-items:center;
+      gap:2px;
+      margin-left: 3px;
+    }
+    .win{
+      width: 36px;
+      height: 26px;
+      border-radius: 6px;
+      border:1px solid transparent;
+      background:transparent;
+      display:grid;
+      place-items:center;
+      cursor:pointer;
+      color:#3f3f3f;
+      transition: all 0.15s ease;
+    }
+    .win:hover{
+      background: rgba(0,0,0,.06);
+      border-color: rgba(0,0,0,.1);
+    }
+    .win:active{
+      transform: scale(0.95);
+    }
+
+    .status-bubble{
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 1px solid rgba(26,143,74,.2);
+      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+      display:grid;
+      place-items:center;
+      color:#1a8f4a;
+      box-shadow: 0 2px 4px rgba(26,143,74,.15);
+    }
+
+    .share{
+      height: 30px;
+      padding: 0 11px;
+      border:none;
+      border-radius: 6px;
+      background: linear-gradient(135deg, #0078d4 0%, #0066b8 100%);
+      color:#fff;
+      font-weight: 600;
+      font-size: 13px;
+      display:flex;
+      align-items:center;
+      gap: 7px;
+      cursor:pointer;
+      box-shadow: 0 2px 4px rgba(0,120,212,.3), 0 1px 2px rgba(0,120,212,.2);
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+    .share:hover{
+      background: linear-gradient(135deg, #006cbe 0%, #005ba1 100%);
+      box-shadow: 0 3px 6px rgba(0,120,212,.35), 0 2px 4px rgba(0,120,212,.25);
+      transform: translateY(-1px);
+    }
+    .share:active{
+      transform: translateY(0);
+    }
+
+    /* Tabs - Enhanced */
+    .tabsbar{
+      background: linear-gradient(180deg, #f3f6f9 0%, #eff3f7 100%);
+      border-bottom: 1px solid rgba(0,0,0,.08);
+      display:flex;
+      align-items:flex-end;
+      gap: 16px;
+      padding: 0 12px;
+      user-select:none;
+      overflow: hidden;
+    }
+    .tab{
+      appearance:none;
+      border:none;
+      background: transparent;
+      padding: 8px 0 7px;
+      font-size: 13.5px;
+      color:#4a4a4a;
+      cursor:pointer;
+      position:relative;
+      line-height:1;
+      white-space:nowrap;
+      transition: all 0.2s ease;
+    }
+    .tab:hover{
+      color:#1a1a1a;
+    }
+    .tab.active{
+      font-weight: 600;
+      color:#0078d4;
+    }
+    .tab.active::after{
+      content:"";
+      position:absolute;
+      left:0;
+      right:0;
+      bottom:-1px;
+      height: 3px;
+      background: linear-gradient(90deg, #0078d4 0%, #0066b8 100%);
+      border-radius: 2px 2px 0 0;
+      box-shadow: 0 -2px 4px rgba(0,120,212,.3);
+    }
+
+    /* Ribbon - Enhanced */
+    .ribbon{
+      background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+      border-bottom: 1px solid rgba(0,0,0,.1);
+      box-shadow: 0 1px 3px rgba(0,0,0,.04);
+      display:flex;
+      align-items:stretch;
+      padding: 5px 12px 7px;
+      gap: 12px;
+      overflow:hidden;
+      user-select:none;
+    }
+
+    .group{
+      position:relative;
+      padding: 3px 11px 18px;
+      display:flex;
+      flex-direction:column;
+      gap: 9px;
+      min-width: 180px;
+    }
+    .group::after{
+      content:"";
+      position:absolute;
+      top: 5px;
+      bottom: 7px;
+      right: -6px;
+      width: 1px;
+      background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,.08) 50%, transparent 100%);
+    }
+    .group:last-child::after{ display:none; }
+
+    .gtitle{
+      position:absolute;
+      left:0;
+      right:0;
+      bottom: 3px;
+      font-size: 11px;
+      color: var(--muted);
+      text-align:center;
+      font-weight: 500;
+    }
+    .launcher{
+      position:absolute;
+      right: 4px;
+      bottom: 3px;
+      width: 17px;
+      height: 17px;
+      border:1px solid transparent;
+      border-radius: 4px;
+      display:grid;
+      place-items:center;
+      color: #7a7a7a;
+      cursor:pointer;
+      transition: all 0.15s ease;
+    }
+    .launcher:hover{
+      border-color: rgba(0,0,0,.12);
+      background: rgba(0,0,0,.04);
+      box-shadow: 0 1px 2px rgba(0,0,0,.05);
+    }
+
+    .row{ display:flex; align-items:flex-start; gap: 9px; }
+    .col{ display:flex; flex-direction:column; gap: 7px; }
+
+    .btn{
+      border: 1px solid transparent;
+      background: transparent;
+      border-radius: 6px;
+      padding: 6px 7px;
+      display:flex;
+      align-items:center;
+      gap: 7px;
+      font-size: 13px;
+      color:#2f2f2f;
+      cursor:pointer;
+      line-height:1.05;
+      transition: all 0.15s ease;
+    }
+    .btn:hover{
+      background: rgba(0,0,0,.05);
+      border-color: rgba(0,0,0,.1);
+      box-shadow: 0 1px 2px rgba(0,0,0,.05);
+    }
+    .btn:active{
+      transform: scale(0.97);
+    }
+
+    .btn.disabled{
+      opacity:.42;
+      cursor:default;
+      filter: grayscale(1);
+    }
+    .btn.disabled:hover{
+      background: transparent;
+      border-color: transparent;
+      box-shadow: none;
+    }
+
+    .btn.big{
+      width: 78px;
+      height: 64px;
+      flex-direction:column;
+      justify-content:center;
+      gap: 5px;
+      border: 1px solid rgba(0,0,0,.12);
+      background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    }
+    .btn.big:hover{
+      box-shadow: 0 2px 4px rgba(0,0,0,.08);
+    }
+    .btn.big .lbl{ font-size: 12.5px; font-weight: 500; }
+    .btn.big .sub{ font-size: 11px; color: var(--muted2); margin-top: -2px; }
+
+    .drop{
+      height: 26px;
+      border: 1px solid rgba(0,0,0,.15);
+      border-radius: 5px;
+      background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+      padding: 0 9px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 9px;
+      font-size: 13px;
+      color:#2f2f2f;
+      min-width: 150px;
+      box-shadow: 0 1px 2px rgba(0,0,0,.04) inset;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .drop:hover{
+      border-color: rgba(0,0,0,.2);
+      box-shadow: 0 1px 3px rgba(0,0,0,.06) inset;
+    }
+    .drop.small{ min-width: 56px; }
+    .caret{ color: var(--muted2); font-size: 12px; }
+
+    .vsep{ width:1px; align-self:stretch; background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,.08) 50%, transparent 100%); margin: 0 5px; }
+
+    .ico{
+      width: 17px;
+      height: 17px;
+      display:inline-block;
+      color:#2f2f2f;
+      filter: drop-shadow(0 0.5px 0 rgba(255,255,255,.5));
+    }
+    .ico.big{ width: 26px; height: 26px; }
+    svg{ display:block; shape-rendering: geometricPrecision; }
+    .stroke{
+      stroke: currentColor;
+      stroke-width: 1.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      vector-effect: non-scaling-stroke;
+      fill: none;
+    }
+
+    .styles{ min-width: 560px; }
+    .stylebar{ display:flex; align-items:center; gap:9px; }
+    .style-strip{
+      display:flex;
+      align-items:stretch;
+      gap: 7px;
+      border: 1px solid rgba(0,0,0,.12);
+      border-radius: 6px;
+      background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+      padding: 5px;
+      overflow:hidden;
+      flex: 1;
+      box-shadow: 0 1px 2px rgba(0,0,0,.04) inset;
+      min-width: 0;
+    }
+    .style{
+      width: 98px;
+      border: 1px solid transparent;
+      border-radius: 5px;
+      padding: 5px 7px;
+      cursor:pointer;
+      display:flex;
+      flex-direction:column;
+      gap: 5px;
+      transition: all 0.15s ease;
+    }
+    .style:hover{
+      background: rgba(0,0,0,.04);
+      border-color: rgba(0,0,0,.08);
+    }
+    .style.selected{
+      border-color: rgba(0,120,212,.3);
+      box-shadow: 0 0 0 1px rgba(0,120,212,.1) inset;
+      background: linear-gradient(180deg, #f0f7ff 0%, #e6f2ff 100%);
+    }
+    .sample{
+      font-size: 13.5px;
+      color:#1e1e1e;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      line-height:1.05;
+      font-weight: 500;
+    }
+    .name{
+      font-size: 11px;
+      color: var(--muted);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .collapse{
+      margin-left:auto;
+      width: 28px;
+      border-left: 1px solid rgba(0,0,0,.08);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#666;
+      cursor:pointer;
+      transition: all 0.15s ease;
+    }
+    .collapse:hover{
+      background: rgba(0,0,0,.04);
+      color:#333;
+    }
+
+    /* Document area - Enhanced */
+    .editor{
+      background: var(--canvas);
+      overflow: hidden;
+      padding: 18px 0 24px;
+      display:flex;
+      justify-content:center;
+      align-items:stretch;
+      min-height: 0;
+    }
+
+    .page{
+      width: var(--page-w);
+      height: 100%;
+      background: #ffffff;
+      border: 1px solid rgba(0,0,0,.1);
+      box-shadow: var(--shadow-lg);
+      outline:none;
+      padding: 64px;
+      border-radius: 3px;
+      display:flex;
+      flex-direction:column;
+      min-height: 0;
+    }
+
+    #terminal{
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      user-select: text;
+    }
+
+    .xterm {
+      height: 100% !important;
+      width: 100% !important;
+    }
+    .xterm .xterm-viewport {
+      overflow-y: auto !important;
+    }
+
+    /* Custom scrollbar */
+    .xterm .xterm-viewport::-webkit-scrollbar {
+      width: 12px;
+    }
+    .xterm .xterm-viewport::-webkit-scrollbar-track {
+      background: rgba(0,0,0,.02);
+      border-radius: 6px;
+    }
+    .xterm .xterm-viewport::-webkit-scrollbar-thumb {
+      background: rgba(0,0,0,.15);
+      border-radius: 6px;
+      border: 2px solid #ffffff;
+    }
+    .xterm .xterm-viewport::-webkit-scrollbar-thumb:hover {
+      background: rgba(0,0,0,.25);
+    }
+
+    /* Status bar - Enhanced */
+    .status{
+      background: linear-gradient(180deg, #fafafa 0%, #f5f5f5 100%);
+      border-top: 1px solid rgba(0,0,0,.08);
+      box-shadow: 0 -1px 0 rgba(255,255,255,.8) inset;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 0 12px;
+      font-size: 12px;
+      color:#3a3a3a;
+      user-select:none;
+      overflow: hidden;
+    }
+    .status .left,.status .right{
+      display:flex;
+      align-items:center;
+      gap: 14px;
+      min-width: 0;
+    }
+    .zoom{
+      display:flex;
+      align-items:center;
+      gap:9px;
+      color: var(--muted2);
+      white-space: nowrap;
+    }
+    .slider{
+      width: 120px;
+      height: 5px;
+      border-radius:3px;
+      background: linear-gradient(180deg, #e0e0e0 0%, #d0d0d0 100%);
+      position:relative;
+      box-shadow: 0 1px 2px rgba(0,0,0,.1) inset;
+    }
+    .knob{
+      position:absolute;
+      top:50%;
+      transform: translate(-50%,-50%);
+      left: 78%;
+      width: 11px;
+      height: 11px;
+      border-radius:50%;
+      background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+      border: 1px solid rgba(0,0,0,.2);
+      box-shadow: 0 2px 4px rgba(0,0,0,.15);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .knob:hover{
+      transform: translate(-50%,-50%) scale(1.1);
+      box-shadow: 0 3px 6px rgba(0,0,0,.2);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+
+    <!-- FILE MENU OVERLAY -->
+    <div id="file-menu">
+      <div class="file-sidebar">
+        <button class="file-back" onclick="closeFileMenu()">
+          <span class="ico">
+            <svg viewBox="0 0 24 24"><path class="stroke" stroke="#fff" d="M15 18l-6-6 6-6"/></svg>
+          </span>
+          Back
+        </button>
+        
+        <div class="file-nav-item active" onclick="switchFileSection('terminal')">Terminal</div>
+        <div class="file-nav-item" onclick="switchFileSection('tools')">Kali Tools</div>
+        <div class="file-nav-item" onclick="switchFileSection('view')">View Options</div>
+        <div class="file-nav-item" onclick="switchFileSection('session')">Session</div>
+        <div class="file-nav-item" onclick="switchFileSection('about')">About</div>
+      </div>
+
+      <div class="file-content">
+        <!-- Terminal Section -->
+        <div id="section-terminal" class="file-section active">
+          <h2>Terminal Actions</h2>
+          
+          <h3>Basic Actions</h3>
+          <div class="file-grid">
+            <button class="file-btn" onclick="terminalAction('clear')">
+              <strong>Clear Screen</strong>
+              <small>Ctrl+L</small>
+            </button>
+            <button class="file-btn" onclick="terminalAction('reset')">
+              <strong>Reset Terminal</strong>
+              <small>Full reset</small>
+            </button>
+            <button class="file-btn" onclick="terminalAction('copy')">
+              <strong>Copy</strong>
+              <small>Ctrl+Shift+C</small>
+            </button>
+            <button class="file-btn" onclick="terminalAction('paste')">
+              <strong>Paste</strong>
+              <small>Ctrl+Shift+V</small>
+            </button>
+          </div>
+
+          <h3>Navigation</h3>
+          <div class="file-grid">
+            <button class="file-btn" onclick="terminalAction('home')">
+              <strong>Go Home</strong>
+              <small>cd ~</small>
+            </button>
+            <button class="file-btn" onclick="terminalAction('root')">
+              <strong>Go Root</strong>
+              <small>cd /</small>
+            </button>
+            <button class="file-btn" onclick="terminalAction('back')">
+              <strong>Go Back</strong>
+              <small>cd -</small>
+            </button>
+          </div>
+        </div>
+
+        <!-- Kali Tools Section -->
+        <div id="section-tools" class="file-section">
+          <h2>Kali Tools</h2>
+          
+          <h3>Reconnaissance</h3>
+          <div class="file-grid">
+            <button class="file-btn" onclick="launchTool('nmap')">
+              <strong>Nmap</strong>
+              <small>Network scanner</small>
+            </button>
+            <button class="file-btn" onclick="launchTool('masscan')">
+              <strong>Masscan</strong>
+              <small>Fast port scanner</small>
+            </button>
+            <button class="file-btn" onclick="launchTool('wireshark')">
+              <strong>Wireshark</strong>
+              <small>Packet analyzer</small>
+            </button>
+          </div>
+
+          <h3>Exploitation</h3>
+          <div class="file-grid">
+            <button class="file-btn" onclick="launchTool('msfconsole')">
+              <strong>Metasploit</strong>
+              <small>Exploitation framework</small>
+            </button>
+            <button class="file-btn" onclick="launchTool('sqlmap')">
+              <strong>SQLMap</strong>
+              <small>SQL injection tool</small>
+            </button>
+            <button class="file-btn" onclick="launchTool('burpsuite')">
+              <strong>Burp Suite</strong>
+              <small>Web security testing</small>
+            </button>
+          </div>
+
+          <h3>Password Attacks</h3>
+          <div class="file-grid">
+            <button class="file-btn" onclick="launchTool('hydra')">
+              <strong>Hydra</strong>
+              <small>Password cracker</small>
+            </button>
+            <button class="file-btn" onclick="launchTool('john')">
+              <strong>John the Ripper</strong>
+              <small>Password cracker</small>
+            </button>
+            <button class="file-btn" onclick="launchTool('hashcat')">
+              <strong>Hashcat</strong>
+              <small>Advanced password recovery</small>
+            </button>
+          </div>
+
+          <h3>Web Applications</h3>
+          <div class="file-grid">
+            <button class="file-btn" onclick="launchTool('nikto')">
+              <strong>Nikto</strong>
+              <small>Web scanner</small>
+            </button>
+            <button class="file-btn" onclick="launchTool('gobuster')">
+              <strong>Gobuster</strong>
+              <small>Directory brute-forcer</small>
+            </button>
+            <button class="file-btn" onclick="launchTool('ffuf')">
+              <strong>Ffuf</strong>
+              <small>Fast fuzzer</small>
+            </button>
+          </div>
+        </div>
+
+        <!-- View Options Section -->
+        <div id="section-view" class="file-section">
+          <h2>View Options</h2>
+          
+          <h3>Font Size</h3>
+          <div class="file-grid">
+            <button class="file-btn" onclick="viewAction('font-smaller')">
+              <strong>Smaller</strong>
+              <small>Ctrl+-</small>
+            </button>
+            <button class="file-btn" onclick="viewAction('font-larger')">
+              <strong>Larger</strong>
+              <small>Ctrl++</small>
+            </button>
+            <button class="file-btn" onclick="viewAction('font-reset')">
+              <strong>Reset</strong>
+              <small>Ctrl+0</small>
+            </button>
+          </div>
+
+          <h3>Themes</h3>
+          <div class="file-grid">
+            <button class="file-btn" onclick="viewAction('theme-light')">
+              <strong>Light Theme</strong>
+              <small>Default</small>
+            </button>
+            <button class="file-btn" onclick="viewAction('theme-dark')">
+              <strong>Dark Theme</strong>
+              <small>Easy on eyes</small>
+            </button>
+            <button class="file-btn" onclick="viewAction('theme-matrix')">
+              <strong>Matrix</strong>
+              <small>Green on black</small>
+            </button>
+            <button class="file-btn" onclick="viewAction('theme-hacker')">
+              <strong>Hacker</strong>
+              <small>Black on green</small>
+            </button>
+          </div>
+        </div>
+
+        <!-- Session Section -->
+        <div id="section-session" class="file-section">
+          <h2>Session Management</h2>
+          
+          <h3>Export</h3>
+          <div class="file-grid">
+            <button class="file-btn" onclick="sessionAction('export-history')">
+              <strong>Export History</strong>
+              <small>Save command history</small>
+            </button>
+            <button class="file-btn" onclick="sessionAction('export-buffer')">
+              <strong>Export Buffer</strong>
+              <small>Save terminal output</small>
+            </button>
+          </div>
+
+          <h3>Clear Data</h3>
+          <div class="file-grid">
+            <button class="file-btn" onclick="sessionAction('clear-history')">
+              <strong>Clear History</strong>
+              <small>Remove all history</small>
+            </button>
+            <button class="file-btn" onclick="sessionAction('clear-suggestions')">
+              <strong>Clear Suggestions</strong>
+              <small>Reset autocomplete</small>
+            </button>
+          </div>
+        </div>
+
+        <!-- About Section -->
+        <div id="section-about" class="file-section">
+          <h2>About WordTerm</h2>
+          <p style="font-size: 15px; line-height: 1.6; color: #3a3a3a; max-width: 640px;">
+            <strong>WordTerm v1.0</strong><br><br>
+            A unique terminal emulator disguised as Microsoft Word, combining professional aesthetics with powerful Kali Linux capabilities.
+            <br><br>
+            <strong>Features:</strong><br>
+            • Full bash terminal with PTY support<br>
+            • Smart autocomplete with command/file suggestions<br>
+            • Auto-cd when typing directory paths<br>
+            • Integrated Kali tool launcher<br>
+            • Copy/paste with Ctrl+Shift+C/V<br>
+            • Context menu support<br>
+            • Multiple themes<br>
+            <br>
+            Built with Electron + xterm.js + node-pty
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TITLEBAR -->
+    <header class="titlebar">
+      <div class="left-title">
+        <div class="word-icon">W</div>
+
+        <div class="autosave">
+          <span>AutoSave</span>
+          <span class="toggle" aria-hidden="true"></span>
+          <span class="toggle-off">Off</span>
+        </div>
+
+        <div class="qa">
+          <button class="qbtn" title="Save" style="color:var(--purple)">
+            <span class="ico">
+              <svg viewBox="0 0 24 24"><path class="stroke" d="M5 4h12l2 2v14H5V4Z"/><path class="stroke" d="M8 4v6h8V4"/><path class="stroke" d="M8 20v-6h8v6"/></svg>
+            </span>
+          </button>
+          <button class="qbtn" title="Undo">
+            <span class="ico">
+              <svg viewBox="0 0 24 24"><path class="stroke" d="M9 7H5v4"/><path class="stroke" d="M5 11c2-4 7-6 11-3 2 2 3 6 1 9"/></svg>
+            </span>
+          </button>
+          <button class="qbtn" title="Redo">
+            <span class="ico">
+              <svg viewBox="0 0 24 24"><path class="stroke" d="M15 7h4v4"/><path class="stroke" d="M19 11c-2-4-7-6-11-3-2 2-3 6-1 9"/></svg>
+            </span>
+          </button>
+          <button class="qbtn" title="Quick Access options">
+            <span class="ico">
+              <svg viewBox="0 0 24 24"><path class="stroke" d="M8 10l4 4 4-4"/></svg>
+            </span>
+          </button>
+        </div>
+
+        <div class="docname">Document1 &nbsp;-&nbsp; Word</div>
+      </div>
+
+      <div class="searchwrap">
+        <div class="search">
+          <span class="ico">
+            <svg viewBox="0 0 24 24"><path class="stroke" d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"/><path class="stroke" d="M16.5 16.5 21 21"/></svg>
+          </span>
+          <input placeholder="Search" />
+        </div>
+      </div>
+
+      <div class="right-title">
+        <div class="avatar" title="KG">KG</div>
+
+        <div class="winbtns">
+          <button class="win" title="Minimize">
+            <span class="ico"><svg viewBox="0 0 24 24"><path class="stroke" d="M6 12h12"/></svg></span>
+          </button>
+          <button class="win" title="Maximize">
+            <span class="ico"><svg viewBox="0 0 24 24"><path class="stroke" d="M7 7h10v10H7V7Z"/></svg></span>
+          </button>
+          <button class="win" title="Close">
+            <span class="ico"><svg viewBox="0 0 24 24"><path class="stroke" d="M7 7l10 10M17 7 7 17"/></svg></span>
+          </button>
+        </div>
+
+        <div class="status-bubble" title="Status">
+          <span class="ico" style="width:15px;height:15px;">
+            <svg viewBox="0 0 24 24"><path class="stroke" d="M6 12l4 4 8-9"/></svg>
+          </span>
+        </div>
+
+        <button class="share" title="Share">
+          <span class="ico" style="color:#fff">
+            <svg viewBox="0 0 24 24"><path class="stroke" d="M12 5v10"/><path class="stroke" d="M8 8l4-4 4 4"/><path class="stroke" d="M6 14v5h12v-5"/></svg>
+          </span>
+          Share <span style="opacity:.9">▾</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- TABS -->
+    <nav class="tabsbar">
+      <button class="tab" onclick="openFileMenu()">File</button>
+      <button class="tab active">Home</button>
+      <button class="tab">Insert</button>
+      <button class="tab">Design</button>
+      <button class="tab">Layout</button>
+      <button class="tab">References</button>
+      <button class="tab">Mailings</button>
+      <button class="tab">Review</button>
+      <button class="tab">View</button>
+      <button class="tab">Developer</button>
+      <button class="tab">Help</button>
+      <button class="tab">Acrobat</button>
+    </nav>
+
+    <!-- RIBBON -->
+    <section class="ribbon">
+      <div class="group" style="min-width:170px">
+        <div class="row">
+          <button class="btn big" title="Paste">
+            <span class="ico big">
+              <svg viewBox="0 0 24 24">
+                <path class="stroke" d="M8 4h8v3H8V4Z"/>
+                <path class="stroke" d="M7 6H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-1"/>
+                <path class="stroke" d="M9 12h6M9 15h6M9 18h6"/>
+              </svg>
+            </span>
+            <span class="lbl">Paste</span>
+            <span class="sub">▾</span>
+          </button>
+          <div class="col" style="padding-top:2px">
+            <button class="btn disabled" title="Cut">
+              <span class="ico">
+                <svg viewBox="0 0 24 24"><path class="stroke" d="M9 9 21 21"/><path class="stroke" d="M21 3 9 15"/><path class="stroke" d="M7 7a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z"/><path class="stroke" d="M7 13a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z"/></svg>
+              </span>
+              Cut
+            </button>
+            <button class="btn disabled" title="Copy">
+              <span class="ico">
+                <svg viewBox="0 0 24 24"><path class="stroke" d="M9 9h10v10H9V9Z"/><path class="stroke" d="M5 15H4V5h10v1"/></svg>
+              </span>
+              Copy
+            </button>
+            <button class="btn disabled" title="Format Painter">
+              <span class="ico">
+                <svg viewBox="0 0 24 24"><path class="stroke" d="M7 7h10v4H7V7Z"/><path class="stroke" d="M9 11v8"/><path class="stroke" d="M9 19h6"/></svg>
+              </span>
+              Format Painter
+            </button>
+          </div>
+        </div>
+        <div class="gtitle">Clipboard</div>
+        <button class="launcher" title="Clipboard options">
+          <span class="ico" style="width:13px;height:13px;">
+            <svg viewBox="0 0 24 24"><path class="stroke" d="M8 8h8M8 12h8M8 16h8"/><path class="stroke" d="M16 20l4-4"/><path class="stroke" d="M14 20h6v-6"/></svg>
+          </span>
+        </button>
+      </div>
+
+      <div class="group" style="min-width:290px;">
+        <div class="col" style="gap:9px;">
+          <div class="row" style="gap:7px;">
+            <div class="drop"><span>Aptos (Body)</span><span class="caret">▾</span></div>
+            <div class="drop small"><span>11</span><span class="caret">▾</span></div>
+            <button class="btn" title="Increase Font Size"><span class="ico"><svg viewBox="0 0 24 24"><path class="stroke" d="M12 6v12"/><path class="stroke" d="M6 12h12"/></svg></span></button>
+            <button class="btn" title="Decrease Font Size"><span class="ico"><svg viewBox="0 0 24 24"><path class="stroke" d="M6 12h12"/></svg></span></button>
+            <button class="btn" title="Change Case"><span class="ico"><svg viewBox="0 0 24 24"><path class="stroke" d="M6 18l3-12h6l3 12"/><path class="stroke" d="M9 14h6"/></svg></span></button>
+            <button class="btn" title="Clear Formatting"><span class="ico"><svg viewBox="0 0 24 24"><path class="stroke" d="M7 7h10"/><path class="stroke" d="M7 11h6"/><path class="stroke" d="M14 14l6 6"/><path class="stroke" d="M18 14l-4 4"/></svg></span></button>
+          </div>
+          <div class="row" style="gap:5px; flex-wrap:wrap;">
+            <button class="btn" title="Bold"><span class="ico"><svg viewBox="0 0 24 24"><path class="stroke" d="M8 5h6a4 4 0 0 1 0 8H8V5Z"/><path class="stroke" d="M8 13h7a4 4 0 0 1 0 8H8v-8Z"/></svg></span></button>
+            <button class="btn" title="Italic"><span class="ico"><svg viewBox="0 0 24 24"><path class="stroke" d="M10 5h8M6 19h8M14 5l-4 14"/></svg></span></button>
+            <button class="btn" title="Underline"><span class="ico"><svg viewBox="0 0 24 24"><path class="stroke" d="M8 5v7a4 4 0 0 0 8 0V5"/><path class="stroke" d="M6 19h12"/></svg></span></button>
+            <button class="btn" title="Strikethrough"><span class="ico"><svg viewBox="0 0 24 24"><path class="stroke" d="M7 12h10"/><path class="stroke" d="M9 6h6"/><path class="stroke" d="M9 18h6"/></svg></span></button>
+            <div class="vsep"></div>
+            <button class="btn" title="Subscript"><span class="ico"><svg viewBox="0 0 24 24"><path class="stroke" d="M7 7l6 8M13 7l-6 8"/><path class="stroke" d="M16 18h4"/><path class="stroke" d="M16 18c.5-1 1.5-2 3-2 1.2 0 2 .7 2 1.7 0 .9-.5 1.4-1.2 1.9l-2.8 2"/></svg></span></button>
+            <button class="btn" title="Superscript"><span class="ico"><svg viewBox="0 0 24 24"><path class="stroke" d="M7 7l6 8M13 7l-6 8"/><path class="stroke" d="M16 9h4"/><path class="stroke" d="M16 9c.5-1 1.5-2 3-2 1.2 0 2 .7 2 1.7 0 .9-.5 1.4-1.2 1.9l-2.8 2"/></svg></span></button>
+            <div class="vsep"></div>
+            <button class="btn" title="Text Highlight Color">
+              <span class="ico">
+                <svg viewBox="0 0 24 24"><path class="stroke" d="M7 14l7-7 3 3-7 7H7v-3Z"/><path class="stroke" d="M5 19h14"/><rect x="6" y="19.5" width="12" height="2" rx="1" fill="var(--yellow)"></rect></svg>
+              </span>
+            </button>
+            <button class="btn" title="Font Color">
+              <span class="ico">
+                <svg viewBox="0 0 24 24"><path class="stroke" d="M9 16l3-10 3 10"/><path class="stroke" d="M8 18h8"/><path d="M7 21h10" stroke="var(--danger)" stroke-width="2.2" stroke-linecap="round"/></svg>
+              </span>
+            </button>
+          </div>
+        </div>
+        <div class="gtitle">Font</div>
+        <button class="launcher" title="Font options">
+          <span class="ico" style="width:13px;height:13px;">
+            <svg viewBox="0 0 24 24"><path class="stroke" d="M8 8h8M8 12h8M8 16h8"/><path class="stroke" d="M16 20l4-4"/><path class="stroke" d="M14 20h6v-6"/></svg>
+          </span>
+        </button>
+      </div>
+
+      <div class="group" style="min-width:250px;">
+        <div class="row" style="flex-wrap:wrap; gap:5px;">
+          <button class="btn" title="Bullets"><span class="ico"><svg viewBox="0 0 24 24"><path class="stroke" d="M10 7h10M10 12h10M10 17h10"/><path d="M6 7h.01M6 12h.01M6 17h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></span></button>
+          <button class="btn" title="Numbering"><span class="ico"><svg viewBox="0 0 24 24"><path class="stroke" d="M10 7h10M10 12h10M10 17h10"/><path class="stroke" d="M5 7h2M5 12h2M5 17h2"/></svg></span></button>
+          <button class="btn" title="Multilevel List"><span class="ico"><svg viewBox="0 0 24 24"><path class="stroke" d="M10 7h10M10 12h10M10 17h10"/><path class="stroke" d="M5 7h2"/><path class="stroke" d="M5 12h2"/><path class="stroke" d="M5 17h2"/><path class="stroke" d="M7 12l2 0"/></svg></span></button>
+          <div class="vsep"></div>
+          <button class="btn" title="Decrease Indent"><span class="ico"><svg viewBox="0 0 24 24"><path class="stroke" d="M7 7h14M7 12h10M7 17h14"/><path class="stroke" d="M3 12l3-2v4l-3-2Z"/></svg></span></button>
+          <button class="btn" title="Increase Indent"><span class="ico"><svg viewBox="0 0 24 24"><path class="stroke" d="M7 7h14M7 12h10M7 17h14"/><path class="stroke" d="M6 12 3 10v4l3-2Z"/></svg></span></button>
+          <div class="vsep"></div>
+          <button class="btn" title="Align Left"><span class="ico"><svg viewBox="0 0 24 24"><path class="stroke" d="M5 7h14M5 12h10M5 17h14"/></svg></span></button>
+          <button class="btn" title="Center"><span class="ico"><svg viewBox="0 0 24 24"><path class="stroke" d="M7 7h10M5 12h14M7 17h10"/></svg></span></button>
+          <button class="btn" title="Align Right"><span class="ico"><svg viewBox="0 0 24 24"><path class="stroke" d="M5 7h14M9 12h10M5 17h14"/></svg></span></button>
+          <button class="btn" title="Justify"><span class="ico"><svg viewBox="0 0 24 24"><path class="stroke" d="M5 7h14M5 12h14M5 17h14"/></svg></span></button>
+        </div>
+        <div class="gtitle">Paragraph</div>
+        <button class="launcher" title="Paragraph options">
+          <span class="ico" style="width:13px;height:13px;">
+            <svg viewBox="0 0 24 24"><path class="stroke" d="M8 8h8M8 12h8M8 16h8"/><path class="stroke" d="M16 20l4-4"/><path class="stroke" d="M14 20h6v-6"/></svg>
+          </span>
+        </button>
+      </div>
+
+      <div class="group styles">
+        <div class="stylebar">
+          <div class="style-strip">
+            <div class="style selected" title="Normal">
+              <div class="sample">AaBbCcDdEe</div>
+              <div class="name">Normal</div>
+            </div>
+            <div class="style" title="No Spacing">
+              <div class="sample">AaBbCcDdEe</div>
+              <div class="name">No Spaci...</div>
+            </div>
+            <div class="style" title="Heading 1">
+              <div class="sample" style="color:var(--accent); font-size:17px; font-weight:600;">AaBbCc</div>
+              <div class="name">Heading 1</div>
+            </div>
+            <div class="style" title="Heading 2">
+              <div class="sample" style="color:var(--accent); font-size:16px; font-weight:600;">AaBbCcD</div>
+              <div class="name">Heading 2</div>
+            </div>
+            <div class="style" title="Title">
+              <div class="sample" style="font-size:19px; font-weight:700;">AaBb</div>
+              <div class="name">Title</div>
+            </div>
+            <div class="style" title="Subtitle">
+              <div class="sample" style="font-style:italic;">AaBbCcDd</div>
+              <div class="name">Subtitle</div>
+            </div>
+            <div class="style" title="Subtle Emphasis">
+              <div class="sample" style="font-style:italic; color:#3a3a3a;">AaBbCcDd</div>
+              <div class="name">Subtle Em...</div>
+            </div>
+          </div>
+          <button class="btn" title="More styles" style="height:47px; border:1px solid var(--line2); border-radius:3px;">
+            <span class="ico"><svg viewBox="0 0 24 24"><path class="stroke" d="M8 10l4 4 4-4"/></svg></span>
+          </button>
+        </div>
+        <div class="gtitle">Styles</div>
+        <button class="launcher" title="Styles options">
+          <span class="ico" style="width:13px;height:13px;">
+            <svg viewBox="0 0 24 24"><path class="stroke" d="M8 8h8M8 12h8M8 16h8"/><path class="stroke" d="M16 20l4-4"/><path class="stroke" d="M14 20h6v-6"/></svg>
+          </span>
+        </button>
+      </div>
+
+      <div class="collapse" title="Collapse Ribbon">
+        <span class="ico"><svg viewBox="0 0 24 24"><path class="stroke" d="M7 14l5-5 5 5"/></svg></span>
+      </div>
+    </section>
+
+    <!-- DOCUMENT AREA -->
+    <section class="editor">
+      <div class="page">
+        <div id="terminal"></div>
+      </div>
+    </section>
+
+    <!-- STATUS BAR -->
+    <footer class="status">
+      <div class="left">
+        <div>Page 1 of 1</div>
+        <div>0 words</div>
+        <div style="display:flex;align-items:center;gap:7px;">
+          <span class="ico"><svg viewBox="0 0 24 24"><path class="stroke" d="M12 4a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z"/><path class="stroke" d="M6 9h12"/><path class="stroke" d="M10 9v11"/><path class="stroke" d="M14 9v11"/></svg></span>
+          Accessibility: Good to go
+        </div>
+      </div>
+      <div class="right">
+        <div style="display:flex;align-items:center;gap:7px;">
+          <span class="ico"><svg viewBox="0 0 24 24"><path class="stroke" d="M12 7v10"/><path class="stroke" d="M7 12h10"/></svg></span>
+          Focus
+        </div>
+        <div class="zoom">
+          <span>−</span>
+          <div class="slider"><div class="knob"></div></div>
+          <span>+</span>
+          <div style="color:#3a3a3a;">100%</div>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    function openFileMenu(){
+      document.getElementById('file-menu').classList.add('active');
+    }
+
+    function closeFileMenu(){
+      document.getElementById('file-menu').classList.remove('active');
+    }
+
+    function switchFileSection(section){
+      document.querySelectorAll('.file-nav-item').forEach(i => i.classList.remove('active'));
+      document.querySelectorAll('.file-section').forEach(s => s.classList.remove('active'));
+      
+      event.target.classList.add('active');
+      document.getElementById('section-' + section).classList.add('active');
+    }
+
+    function terminalAction(action){
+      window.__terminalAction?.(action);
+    }
+
+    function launchTool(tool){
+      window.__launchTool?.(tool);
+    }
+
+    function viewAction(action){
+      window.__viewAction?.(action);
+    }
+
+    function sessionAction(action){
+      window.__sessionAction?.(action);
+    }
+  </script>
+
+  <script src="./renderer.js"></script>
+</body>
+</html>
