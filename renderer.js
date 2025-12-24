@@ -2,6 +2,7 @@ const { ipcRenderer } = require('electron');
 const { Terminal } = require('xterm');
 const { FitAddon } = require('xterm-addon-fit');
 const fs = require('fs');
+const os = require('os');
 const { execSync } = require('child_process');
 const path = require('path');
 
@@ -662,7 +663,7 @@ function makeAutocomplete(term, ptyId, cwdRef){
     return;
   }
 
-  const cwdRef = { current: process.env.HOME || '/home/kali' };
+  const cwdRef = { current: os.homedir() || process.env.HOME || '/' };
   const autocomplete = makeAutocomplete(term, id, cwdRef);
 
   let lineBuffer = '';

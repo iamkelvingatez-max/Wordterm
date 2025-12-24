@@ -21,6 +21,13 @@ npm install
 npm start
 ```
 
+## Desktop Launcher (Linux)
+`npm install` will create a launcher in `~/.local/share/applications` and a desktop shortcut if your Desktop folder exists.  
+You can re-run it any time with:
+```bash
+npm run install:desktop
+```
+
 ## Build
 The `build` config in `package.json` is ready for electron-builder. Install `electron-builder` if you want to package.
 
