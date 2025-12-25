@@ -2,7 +2,9 @@
 
 <img src="assets/icons/wordterm-demo-clean.gif" width="900" />
 
-https://buymeacoffee.com/iamkelvingatez
+custom:
+  - "https://buymeacoffee.com/iamkelvingatez"
+
 
 ![Platform](https://img.shields.io/badge/Platform-Kali%20Linux-blue)
 ![Built With](https://img.shields.io/badge/Built%20With-Electron-47848f)
