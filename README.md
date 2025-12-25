@@ -1,11 +1,8 @@
-          WordTerm — Word-Style Terminal Emulator
+# WordTerm — Word-Style Terminal Emulator
 
 <img src="assets/icons/wordterm-demo-clean.gif" width="900" />
 
-buy_me_a_coffee: iamkelvingatez
-custom:
-  - "https://buymeacoffee.com/iamkelvingatez"
-
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?logo=buy-me-a-coffee&logoColor=000000)](https://buymeacoffee.com/iamkelvingatez)
 
 ![Platform](https://img.shields.io/badge/Platform-Kali%20Linux-blue)
 ![Built With](https://img.shields.io/badge/Built%20With-Electron-47848f)
