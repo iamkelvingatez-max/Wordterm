@@ -1,6 +1,6 @@
 # WordTerm
 
-![WordTerm demo](assets/demo/wordterm-demo-clean.gif)
+
 
 WordTerm is an Electron terminal emulator that mimics the Microsoft Word UI. It embeds an xterm.js terminal inside a Word-like document surface and includes a File-style overlay for actions and tool launching.
 
