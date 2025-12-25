@@ -1,7 +1,8 @@
-# WordTerm — Word-Style Terminal Emulator
+          # WordTerm — Word-Style Terminal Emulator
 
 <img src="assets/icons/wordterm-demo-clean.gif" width="900" />
 
+buy_me_a_coffee: iamkelvingatez
 custom:
   - "https://buymeacoffee.com/iamkelvingatez"
 
