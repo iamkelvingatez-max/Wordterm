@@ -5,6 +5,7 @@
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?logo=buy-me-a-coffee&logoColor=000000)](https://buymeacoffee.com/iamkelvingatez)
 
 ![Platform](https://img.shields.io/badge/Platform-Kali%20Linux-blue)
+![Platform](https://img.shields.io/badge/Platform-Windows-0078D4?logo=windows&logoColor=white)
 ![Built With](https://img.shields.io/badge/Built%20With-Electron-47848f)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
@@ -57,9 +58,12 @@ WordTerm makes your terminal look like a document editor:
   - history suggestions
   - command suggestions
   - file/folder completion
+- **Word suggester** (type-ahead suggestions while you write/command)
 - Large paste handling (chunked paste for stability)
 
 ### 🧰 File Menu Overlay
+> **Tip:** There are a few **hidden quality-of-life features** under **File** — including **avatar/initials customization** (the circle in the titlebar), quick tools, and extra view options.
+
 - Terminal actions (clear, reset, navigation helpers)
 - Tool launcher (configurable quick launch entries)
 - View options (font size, theme, terminal display)
@@ -69,6 +73,7 @@ WordTerm makes your terminal look like a document editor:
 - Font selection + size controls
 - Multiple themes (light/dark + variants)
 - Avatar/initials customization (persisted locally)
+- Change the **initials/avatar circle** (top-left) — saved locally
 
 ---
 
@@ -82,7 +87,3 @@ Check:
 ```bash
 node --version
 npm --version
-
-## Platforms
-- Windows: [windows/README.md](windows/README.md)
-- Linux: [linux/README.md](linux/README.md)
