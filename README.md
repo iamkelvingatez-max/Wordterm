@@ -71,7 +71,6 @@ WordTerm makes your terminal look like a document editor:
 
 ### 🎨 Customization
 - Font selection + size controls
-- Multiple themes (light/dark + variants)
 - Avatar/initials customization (persisted locally)
 - Change the **initials/avatar circle** (top-left) — saved locally
 
